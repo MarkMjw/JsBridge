@@ -12,13 +12,15 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.widget.Button;
 
+import com.github.lzyzsd.jsbridge.BridgeHandler;
 import com.github.lzyzsd.jsbridge.BridgeWebView;
-import com.github.lzyzsd.jsbridge.OnBridgeCallback;
+import com.github.lzyzsd.jsbridge.CallBackFunction;
+import com.github.lzyzsd.jsbridge.DefaultHandler;
 import com.google.gson.Gson;
 
 public class MainActivity extends Activity implements OnClickListener {
 
-	private final String TAG = "MainActivity";
+	private final String TAG = "mjw";
 
 	BridgeWebView webView;
 
@@ -30,27 +32,28 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	ValueCallback<Uri[]> mUploadMessageArray;
 
-    static class Location {
-        String address;
-    }
+	static class Location {
+		String address;
+	}
 
-    static class User {
-        String name;
-        Location location;
-        String testStr;
-    }
+	static class User {
+		String name;
+		Location location;
+		String testStr;
+	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-        webView = (BridgeWebView) findViewById(R.id.webView);
+		webView = (BridgeWebView) findViewById(R.id.webView);
 
 		button = (Button) findViewById(R.id.button);
 
 		button.setOnClickListener(this);
 
+		webView.setDefaultHandler(new DefaultHandler());
 
 		webView.setWebChromeClient(new WebChromeClient() {
 
@@ -77,24 +80,32 @@ public class MainActivity extends Activity implements OnClickListener {
 			}
 		});
 
-		webView.addJavascriptInterface(new MainJavascrotInterface(webView.getCallbacks(), webView), "android");
-		webView.setGson(new Gson());
 		webView.loadUrl("file:///android_asset/demo.html");
 
-        User user = new User();
-        Location location = new Location();
-        location.address = "SDU";
-        user.location = location;
-        user.name = "大头鬼";
+		webView.registerHandler("submitFromWeb", new BridgeHandler() {
 
-        webView.callHandler("functionInJs", new Gson().toJson(user), new OnBridgeCallback() {
-            @Override
-            public void onCallBack(String data) {
-				Log.d(TAG, "onCallBack: " + data);
-            }
-        });
+			@Override
+			public void handler(String data, CallBackFunction function) {
+				Log.i(TAG, "handler = submitFromWeb, data from web = " + data);
+				function.onCallBack("submitFromWeb exe, response data 中文 from Java");
+			}
 
-        webView.sendToWeb("hello");
+		});
+
+		User user = new User();
+		Location location = new Location();
+		location.address = "SDU";
+		user.location = location;
+		user.name = "大头鬼";
+
+		webView.callHandler("functionInJs", new Gson().toJson(user), new CallBackFunction() {
+			@Override
+			public void onCallBack(String data) {
+				Log.i(TAG, data);
+			}
+		});
+
+		webView.send("hello");
 
 	}
 
@@ -118,9 +129,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
 			if(null == mUploadMessage && null != mUploadMessageArray){
 				Uri result = intent == null || resultCode != RESULT_OK ? null : intent.getData();
-				if (result != null) {
-					mUploadMessageArray.onReceiveValue(new Uri[]{result});
-				}
+				mUploadMessageArray.onReceiveValue(new Uri[]{result});
 				mUploadMessageArray = null;
 			}
 
@@ -130,7 +139,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	@Override
 	public void onClick(View v) {
 		if (button.equals(v)) {
-            webView.callHandler("functionInJs", "data from Java", new OnBridgeCallback() {
+			webView.callHandler("functionInJs", "data from Java", new CallBackFunction() {
 
 				@Override
 				public void onCallBack(String data) {
