@@ -108,7 +108,7 @@ public class Message {
     }
 
     public static List<Message> toArrayList(String jsonStr) {
-        List<Message> list = new ArrayList<Message>();
+        List<Message> list = new ArrayList<>();
         try {
             JSONArray jsonArray = new JSONArray(jsonStr);
             for (int i = 0; i < jsonArray.length(); i++) {
