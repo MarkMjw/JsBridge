@@ -1,5 +1,6 @@
 package com.github.lzyzsd.jsbridge.example;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
@@ -42,6 +43,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		String testStr;
 	}
 
+	@SuppressLint("SetJavaScriptEnabled")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -79,6 +81,7 @@ public class MainActivity extends Activity implements OnClickListener {
 				return true;
 			}
 		});
+		webView.addJavascriptInterface(new WebAppInterface(this), "angle");
 
 		webView.loadUrl("file:///android_asset/demo.html");
 
